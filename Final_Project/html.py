@@ -1,0 +1,152 @@
+from analytics import calculate_total_spending
+from analytics import calculate_spending_by_category
+from analytics import calculate_monthly_spending
+from analytics import sort_categories_by_amount
+from analytics import sort_months
+from analytics import count_items
+from analytics import calculate_average
+from analytics import find_highest_order
+from analytics import find_lowest_order
+import os
+
+def generate_html_report(orders, filename):
+    if len(orders) == 0:
+        print("No data to export.")
+        return
+    
+    total = calculate_total_spending(orders)
+    item_count = count_items(orders)
+    average = calculate_average(orders)
+    highest = find_highest_order(orders)
+    
+    category_totals = calculate_spending_by_category(orders)
+    sorted_categories = sort_categories_by_amount(category_totals)
+    
+    monthly_totals = calculate_monthly_spending(orders)
+    sorted_months = sort_months(monthly_totals)
+    
+    max_monthly = 0
+    for item in sorted_months:
+        if item[1] > max_monthly:
+            max_monthly = item[1]
+    
+    script_folder = os.path.dirname(os.path.abspath(__file__))
+    css_path = os.path.join(script_folder, "styles.css")
+    css_file = open(css_path, "r")
+    css_content = css_file.read()
+    css_file.close()
+    
+    category_html = ""
+    for item in sorted_categories:
+        category = item[0]
+        amount = item[1]
+        percentage = round((amount / total) * 100, 1)
+        category_html = category_html + f"""
+            <div class="category-item">
+                <div class="category-header">
+                    <span class="category-name">{category}</span>
+                    <span class="category-amount">${amount}</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: {percentage}%;"></div>
+                </div>
+                <span class="category-percent">{percentage}%</span>
+            </div>"""
+    
+    monthly_html = ""
+    for item in sorted_months:
+        month = item[0]
+        amount = item[1]
+        bar_height = round((amount / max_monthly) * 100, 1) if max_monthly > 0 else 0
+        month_label = month.split("-")[1]
+        monthly_html = monthly_html + f"""
+            <div class="bar-group">
+                <div class="bar-wrapper">
+                    <div class="bar" style="height: {bar_height}%;">
+                        <span class="bar-value">${int(amount)}</span>
+                    </div>
+                </div>
+                <span class="bar-label">{month_label}</span>
+            </div>"""
+    
+    top_html = ""
+    count = 0
+    for item in sorted_categories:
+        if count >= 5:
+            break
+        category = item[0]
+        amount = item[1]
+        count = count + 1
+        top_html = top_html + f"""
+            <div class="top-item">
+                <span class="top-rank">{count}</span>
+                <span class="top-name">{category}</span>
+                <span class="top-amount">${amount}</span>
+            </div>"""
+    
+    html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon Spending Report</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+{css_content}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-content">
+            <h1 class="title">Spending Report</h1>
+            <p class="subtitle">Amazon Order Analysis</p>
+        </div>
+    </header>
+    <section class="stats-grid">
+        <div class="stat-card stat-card-primary">
+            <span class="stat-label">Total Spent</span>
+            <span class="stat-value">${total}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Items Purchased</span>
+            <span class="stat-value">{item_count}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Average Order</span>
+            <span class="stat-value">${average}</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-label">Highest Order</span>
+            <span class="stat-value">${highest}</span>
+        </div>
+    </section>
+    <section class="two-column">
+        <div class="panel">
+            <h2 class="panel-title">Spending by Category</h2>
+            <div class="category-list">{category_html}
+            </div>
+        </div>
+        <div class="panel">
+            <h2 class="panel-title">Monthly Spending</h2>
+            <div class="chart-container">{monthly_html}
+            </div>
+        </div>
+    </section>
+    <section class="panel top-categories">
+        <h2 class="panel-title">Top 5 Categories</h2>
+        <div class="top-list">{top_html}
+        </div>
+    </section>
+    <footer class="footer">
+        <p>Generated by Amazon Spending Tracker</p>
+    </footer>
+</div>
+</body>
+</html>"""
+    
+    file = open(filename, "w")
+    file.write(html)
+    file.close()
+    
+    print("HTML report saved to " + filename)
