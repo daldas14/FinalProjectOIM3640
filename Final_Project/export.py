@@ -16,7 +16,7 @@ def export_report(orders,filename):
     monthly_totals = calculate_monthly_spending(orders)
     sorted_months = sort_months(monthly_totals)
 
-    file = open(filename,"w")
+    file = open(filename, "w")
 
     file.write("AMAZON ORDER REPORT\n")
     file.write("=" *50 + "\n")
