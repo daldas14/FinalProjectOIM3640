@@ -66,4 +66,4 @@ For my use of an AI assistant I used Claude AI which helped me develop and debug
  ![Terminal Menu Screenshot](images/image-1.png)
 ![Text File Sample ](images/image-2.png)
 
-<video controls src="20251205-1156-05.7726896.mp4" title="JavaScript Functionality Recording"></video>
+<video controls src="Javadcript_functionality.mp4" title="JavaScript Functionality Recording"></video>
